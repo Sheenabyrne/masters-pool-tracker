@@ -1,5 +1,5 @@
 def get_leaderboard():
-    url = "https://site.web.api.espn.com/apis/v2/sports/golf/leaderboard"
+    url = "https://site.api.espn.com/apis/site/v2/sports/golf/leaderboard"
 
     players = {}
 
@@ -7,40 +7,39 @@ def get_leaderboard():
         response = requests.get(url, timeout=10)
         data = response.json()
 
-        # 🔍 DEBUG: print structure
-        print("Top-level keys:", list(data.keys()))
-
         events = data.get("events", [])
-        print("Number of events:", len(events))
 
         for event in events:
-            print("Event found:", event.get("name"))
+            name = event.get("name", "")
+
+            # Only grab Masters Tournament
+            if "Masters" not in name:
+                continue
 
             competitions = event.get("competitions", [])
             if not competitions:
                 continue
 
             competitors = competitions[0].get("competitors", [])
-            print("Competitors count:", len(competitors))
 
             for player in competitors:
-                try:
-                    name = player.get("athlete", {}).get("displayName", "Unknown")
-                    score_raw = player.get("score", "0")
+                athlete = player.get("athlete", {})
+                display_name = athlete.get("displayName", "Unknown")
 
-                    if score_raw == "E":
-                        score = 0
-                    else:
+                score_raw = player.get("score", "0")
+
+                if score_raw == "E":
+                    score = 0
+                else:
+                    try:
                         score = int(score_raw)
+                    except:
+                        score = 0
 
-                    players[name] = score
-
-                except Exception as inner_error:
-                    print("Player parse error:", inner_error)
-                    continue
+                players[display_name] = score
 
         if not players:
-            print("⚠️ No players parsed from ESPN")
+            print("⚠️ No Masters players found")
 
     except Exception as e:
         print("❌ ESPN fetch failed:", e)
