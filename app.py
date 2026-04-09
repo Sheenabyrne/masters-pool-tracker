@@ -61,7 +61,7 @@ MANUAL_SCORES = {
     "Nicolai Hojgaard": 4,
     "Patrick Cantlay": 5,
     "Patrick Reed": -3,
-    "Rasmus Hojgaard": 5,
+    "Rasmus Hojgaard": 6,
     "Rasmus Neergaard-Petersen": 5,
     "Robert MacIntyre": 8,
     "Rory McIlroy": -5,
