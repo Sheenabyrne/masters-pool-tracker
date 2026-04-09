@@ -1,90 +1,152 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Masters Pool Leaderboard</title>
+from flask import Flask, jsonify, render_template
+import json
+import unicodedata
+from datetime import datetime
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #0b3d2e; /* Masters green */
-            color: white;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-        }
+app = Flask(__name__)
 
-        h1 {
-            color: #f7c948; /* Masters yellow */
-            margin-bottom: 20px;
-        }
+# 🔤 Normalize names
+def normalize(name):
+    return unicodedata.normalize('NFKD', name).encode('ASCII', 'ignore').decode().lower().strip()
 
-        table {
-            margin: auto;
-            border-collapse: collapse;
-            width: 80%;
-            background-color: white;
-            color: black;
-            border-radius: 10px;
-            overflow: hidden;
-        }
 
-        th {
-            background-color: #0b3d2e;
-            color: #f7c948;
-            padding: 12px;
-            font-size: 18px;
-        }
+# 🎯 PLAYER LIST
+TRACKED_PLAYERS = [
+    "Adam Scott","Akshay Bhatia","Alexander Noren","Ben Griffin",
+    "Brooks Koepka","Bryson DeChambeau","Bubba Watson","Cameron Smith",
+    "Cameron Young","Charl Schwartzel","Collin Morikawa","Corey Conners",
+    "Danny Willett","Dustin Johnson","Harry Hall","Hideki Matsuyama",
+    "Jacob Bridgeman","Jake Knapp","J.J. Spaun","Jon Rahm",
+    "Jordan Spieth","Justin Rose","Ludvig Aberg","Marco Penge",
+    "Matt Fitzpatrick","Maverick McNealy","Max Homa","Min Woo Lee",
+    "Nicolai Hojgaard","Patrick Cantlay","Patrick Reed","Rasmus Hojgaard",
+    "Rasmus Neergaard-Petersen","Robert MacIntyre","Rory McIlroy",
+    "Sam Burns","Sepp Straka","Shane Lowry","Si Woo Kim",
+    "Sungjae Im","Tommy Fleetwood","Tom McKibbin","Tyrrell Hatton",
+    "Viktor Hovland","Wyndham Clark","Ryan Gerard"
+]
 
-        td {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-        }
 
-        tr:nth-child(even) {
-            background-color: #f4f4f4;
-        }
+# ✏️ MANUAL SCORES
+MANUAL_SCORES = {
+    "Adam Scott": 0,
+    "Akshay Bhatia": 1,
+    "Alexander Noren": 0,
+    "Ben Griffin": 0,
+    "Brooks Koepka": 2,
+    "Bryson DeChambeau": 0,
+    "Bubba Watson": 2,
+    "Cameron Smith": -1,
+    "Cameron Young": 1,
+    "Charl Schwartzel": 2,
+    "Collin Morikawa": 0,
+    "Corey Conners": 0,
+    "Danny Willett": 2,
+    "Dustin Johnson": 2,
+    "Harry Hall": 1,
+    "Hideki Matsuyama": -2,
+    "Jacob Bridgeman": 1,
+    "Jake Knapp": 1,
+    "J.J. Spaun": 1,
+    "Jon Rahm": 0,
+    "Jordan Spieth": 0,
+    "Justin Rose": -4,
+    "Ludvig Aberg": -1,
+    "Marco Penge": 0,
+    "Matt Fitzpatrick": 1,
+    "Maverick McNealy": 0,
+    "Max Homa": 1,
+    "Min Woo Lee": 1,
+    "Nicolai Hojgaard": 0,
+    "Patrick Cantlay": 0,
+    "Patrick Reed": -3,
+    "Rasmus Hojgaard": 0,
+    "Rasmus Neergaard-Petersen": 0,
+    "Robert MacIntyre": 1,
+    "Rory McIlroy": -1,
+    "Sam Burns": -2,
+    "Sepp Straka": -1,
+    "Shane Lowry": 0,
+    "Si Woo Kim": 1,
+    "Sungjae Im": -2,
+    "Tommy Fleetwood": -3,
+    "Tom McKibbin": 0,
+    "Tyrrell Hatton": 2,
+    "Viktor Hovland": 1,
+    "Wyndham Clark": 1,
+    "Ryan Gerard": 0
+}
 
-        tr:hover {
-            background-color: #e6f2ef;
-        }
 
-        .leader {
-            background-color: #f7c948 !important;
-            color: black;
-            font-weight: bold;
-        }
+# 🌐 Build leaderboard
+def get_leaderboard():
+    normalized_manual = {
+        normalize(name): score for name, score in MANUAL_SCORES.items()
+    }
 
-        .footer {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #ccc;
-        }
-    </style>
-</head>
+    final_players = {}
 
-<body>
+    for player in TRACKED_PLAYERS:
+        key = normalize(player)
+        final_players[player] = normalized_manual.get(key, 0)
 
-    <h1>🏆 Masters Pool Leaderboard</h1>
+    return final_players
 
-    <table>
-        <tr>
-            <th>Rank</th>
-            <th>Name</th>
-            <th>Total Score</th>
-        </tr>
 
-        {% for person in results %}
-        <tr class="{% if loop.index == 1 %}leader{% endif %}">
-            <td>{{ loop.index }}</td>
-            <td>{{ person.name }}</td>
-            <td>{{ person.total }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+# 🧮 Calculate pool scores
+def calculate_scores(leaderboard):
+    with open("picks.json") as f:
+        picks = json.load(f)
 
-    <div class="footer">
-        Augusta vibes 🌿 | Updated manually
-    </div>
+    normalized_leaderboard = {
+        normalize(name): score for name, score in leaderboard.items()
+    }
 
-</body>
-</html>
+    results = []
+
+    for person, players in picks.items():
+        total = 0
+        missing = []
+
+        for player in players:
+            key = normalize(player)
+
+            if key in normalized_leaderboard:
+                total += normalized_leaderboard[key]
+            else:
+                missing.append(player)
+
+        results.append({
+            "name": person,
+            "total": total,
+            "missing": missing
+        })
+
+    return sorted(results, key=lambda x: x["total"])
+
+
+# 🏠 Dashboard (WITH TIMESTAMP)
+@app.route("/")
+def home():
+    leaderboard = get_leaderboard()
+    results = calculate_scores(leaderboard)
+
+    last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    return render_template("index.html", results=results, last_updated=last_updated)
+
+
+# 🔍 Debug API
+@app.route("/api")
+def api():
+    leaderboard = get_leaderboard()
+    results = calculate_scores(leaderboard)
+
+    return jsonify({
+        "leaderboard": leaderboard,
+        "results": results
+    })
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
