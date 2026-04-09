@@ -1,84 +1,102 @@
 from flask import Flask, jsonify, render_template
-import requests
 import json
 import unicodedata
 
 app = Flask(__name__)
 
-# 🔤 Normalize names
+# 🔤 Normalize names (handles accents, spacing, case)
 def normalize(name):
     return unicodedata.normalize('NFKD', name).encode('ASCII', 'ignore').decode().lower().strip()
 
 
-# 🎯 YOUR PLAYER LIST (MASTER LIST)
+# 🎯 PLAYER LIST
 TRACKED_PLAYERS = [
-    "Scottie Scheffler","Tommy Fleetwood","Collin Morikawa","Patrick Reed",
-    "Viktor Hovland","Bubba Watson","Corey Conners","Nicolai Hojgaard",
-    "Harry Hall","Wyndham Clark","Jordan Spieth","Sam Burns",
-    "Bryson DeChambeau","Hideki Matsuyama","Akshay Bhatia","Justin Rose",
-    "Charl Schwartzel","Adam Scott","Jake Knapp","Cameron Smith",
-    "Sungjae Im","Jacob Bridgeman","Cameron Young","Matt Fitzpatrick",
-    "Dustin Johnson","Si Woo Kim","Tom McKibbin","Max Homa",
-    "Brooks Koepka","Sepp Straka","Rasmus Neergaard-Petersen",
-    "Shane Lowry","Alexander Noren","Jon Rahm","Min Woo Lee",
-    "Marco Penge","Ben Griffin","Tyrrell Hatton","Rasmus Hojgaard",
-    "J.J. Spaun","Danny Willett","Ryan Gerard","Patrick Cantlay",
-    "Maverick McNealy","Robert MacIntyre"
+    "Adam Scott","Akshay Bhatia","Alexander Noren","Ben Griffin",
+    "Brooks Koepka","Bryson DeChambeau","Bubba Watson","Cameron Smith",
+    "Cameron Young","Charl Schwartzel","Collin Morikawa","Corey Conners",
+    "Danny Willett","Dustin Johnson","Harry Hall","Hideki Matsuyama",
+    "Jacob Bridgeman","Jake Knapp","J.J. Spaun","Jon Rahm",
+    "Jordan Spieth","Justin Rose","Ludvig Aberg","Marco Penge",
+    "Matt Fitzpatrick","Maverick McNealy","Max Homa","Min Woo Lee",
+    "Nicolai Hojgaard","Patrick Cantlay","Patrick Reed","Rasmus Hojgaard",
+    "Rasmus Neergaard-Petersen","Robert MacIntyre","Rory McIlroy",
+    "Sam Burns","Sepp Straka","Shane Lowry","Si Woo Kim",
+    "Sungjae Im","Tommy Fleetwood","Tom McKibbin","Tyrrell Hatton",
+    "Viktor Hovland","Wyndham Clark","Ryan Gerard"
 ]
 
 
-# 🌐 LIVE CBS DATA
+# 📝 MANUAL SCORES
+MANUAL_SCORES = {
+    "Adam Scott": 0,
+    "Akshay Bhatia": 1,
+    "Alexander Noren": 0,
+    "Ben Griffin": 0,
+    "Brooks Koepka": 2,
+    "Bryson DeChambeau": 0,
+    "Bubba Watson": 2,
+    "Cameron Smith": -1,
+    "Cameron Young": 1,
+    "Charl Schwartzel": 2,
+    "Collin Morikawa": 0,
+    "Corey Conners": 0,
+    "Danny Willett": 2,
+    "Dustin Johnson": 2,
+    "Harry Hall": 1,
+    "Hideki Matsuyama": -2,
+    "Jacob Bridgeman": 1,
+    "Jake Knapp": 1,
+    "J.J. Spaun": 1,
+    "Jon Rahm": 0,
+    "Jordan Spieth": 0,
+    "Justin Rose": -4,
+    "Ludvig Aberg": -1,
+    "Marco Penge": 0,
+    "Matt Fitzpatrick": 1,
+    "Maverick McNealy": 0,
+    "Max Homa": 1,
+    "Min Woo Lee": 1,
+    "Nicolai Hojgaard": 0,
+    "Patrick Cantlay": 0,
+    "Patrick Reed": -3,
+    "Rasmus Hojgaard": 0,
+    "Rasmus Neergaard-Petersen": 0,
+    "Robert MacIntyre": 1,
+    "Rory McIlroy": -1,
+    "Sam Burns": -2,
+    "Sepp Straka": -1,
+    "Shane Lowry": 0,
+    "Si Woo Kim": 1,
+    "Sungjae Im": -2,
+    "Tommy Fleetwood": -3,
+    "Tom McKibbin": 0,
+    "Tyrrell Hatton": 2,
+    "Viktor Hovland": 1,
+    "Wyndham Clark": 1,
+    "Ryan Gerard": 0
+}
+
+
+# 🌐 Build leaderboard (ensures all players included)
 def get_leaderboard():
-    url = "https://site.api.cbssports.com/golf/leaderboard/live"
-
-    players = {}
-
-    try:
-        response = requests.get(url, timeout=10)
-        data = response.json()
-
-        leaderboard = data.get("leaderboard", [])
-
-        for player in leaderboard:
-            name = player.get("player_name", "").strip()
-            score_raw = player.get("score", "0")
-
-            # Convert score
-            if score_raw == "E":
-                score = 0
-            else:
-                try:
-                    score = int(score_raw)
-                except:
-                    score = 0
-
-            # Fix "Last, First"
-            if "," in name:
-                parts = name.split(",")
-                name = parts[1].strip() + " " + parts[0].strip()
-
-            players[name] = score
-
-    except Exception as e:
-        print("CBS fetch failed:", e)
-
-    # 🔥 Ensure ALL tracked players exist (default = 0)
-    normalized_live = {normalize(k): v for k, v in players.items()}
+    normalized_manual = {
+        normalize(name): score for name, score in MANUAL_SCORES.items()
+    }
 
     final_players = {}
 
     for player in TRACKED_PLAYERS:
         key = normalize(player)
 
-        if key in normalized_live:
-            final_players[player] = normalized_live[key]
+        if key in normalized_manual:
+            final_players[player] = normalized_manual[key]
         else:
-            final_players[player] = 0  # not started or not found
+            final_players[player] = 0
 
     return final_players
 
 
-# 🧮 Calculate scores
+# 🧮 Calculate pool scores
 def calculate_scores(leaderboard):
     with open("picks.json") as f:
         picks = json.load(f)
