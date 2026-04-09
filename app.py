@@ -35,7 +35,7 @@ MANUAL_SCORES = {
     "Alexander Noren": 0,
     "Ben Griffin": 1,
     "Brooks Koepka": 4,
-    "Bryson DeChambeau": -2,
+    "Bryson DeChambeau": 2,
     "Bubba Watson": 3,
     "Cameron Smith": -2,
     "Cameron Young": 2,
