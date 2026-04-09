@@ -2,6 +2,7 @@ from flask import Flask, jsonify, render_template
 import json
 import unicodedata
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 app = Flask(__name__)
 
@@ -27,14 +28,14 @@ TRACKED_PLAYERS = [
 ]
 
 
-# ✏️ MANUAL SCORES
+# ✏️ MANUAL SCORES (UPDATED)
 MANUAL_SCORES = {
     "Adam Scott": 0,
     "Akshay Bhatia": 1,
     "Alexander Noren": 0,
     "Ben Griffin": 0,
     "Brooks Koepka": 2,
-    "Bryson DeChambeau": 0,
+    "Bryson DeChambeau": 1,
     "Bubba Watson": 2,
     "Cameron Smith": -1,
     "Cameron Young": 1,
@@ -50,7 +51,7 @@ MANUAL_SCORES = {
     "J.J. Spaun": 1,
     "Jon Rahm": 0,
     "Jordan Spieth": 0,
-    "Justin Rose": -4,
+    "Justin Rose": -5,
     "Ludvig Aberg": -1,
     "Marco Penge": 0,
     "Matt Fitzpatrick": 1,
@@ -69,7 +70,7 @@ MANUAL_SCORES = {
     "Shane Lowry": 0,
     "Si Woo Kim": 1,
     "Sungjae Im": -2,
-    "Tommy Fleetwood": -3,
+    "Tommy Fleetwood": -4,
     "Tom McKibbin": 0,
     "Tyrrell Hatton": 2,
     "Viktor Hovland": 1,
@@ -125,13 +126,13 @@ def calculate_scores(leaderboard):
     return sorted(results, key=lambda x: x["total"])
 
 
-# 🏠 Dashboard (WITH TIMESTAMP)
+# 🏠 Dashboard (NEWFOUNDLAND TIME)
 @app.route("/")
 def home():
     leaderboard = get_leaderboard()
     results = calculate_scores(leaderboard)
 
-    last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    last_updated = datetime.now(ZoneInfo("America/St_Johns")).strftime("%Y-%m-%d %H:%M:%S")
 
     return render_template("index.html", results=results, last_updated=last_updated)
 
