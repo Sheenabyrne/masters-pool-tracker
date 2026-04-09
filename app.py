@@ -1,44 +1,46 @@
-def calculate_scores(leaderboard):
-    with open("picks.json") as f:
-        picks = json.load(f)
+def get_leaderboard():
+    url = "https://site.api.cbssports.com/golf/leaderboard/live"
 
-    # Normalize leaderboard names
-    normalized_leaderboard = {
-        normalize(name): score for name, score in leaderboard.items()
-    }
+    players = {}
 
-    results = []
+    try:
+        response = requests.get(url, timeout=10)
 
-    for person, players in picks.items():
-        total = 0
-        missing = []
-        matched_players = []
+        # 🔥 Check if response is valid
+        if response.status_code != 200:
+            print("CBS request failed:", response.status_code)
+            return players
 
-        for player in players:
-            key = normalize(player)
+        try:
+            data = response.json()
+        except Exception as e:
+            print("JSON parse failed:", e)
+            return players
 
-            # 🔥 Try direct match
-            if key in normalized_leaderboard:
-                total += normalized_leaderboard[key]
-                matched_players.append(player)
-            else:
-                # 🔥 Try fuzzy match (partial match)
-                found = False
-                for lb_name, lb_score in normalized_leaderboard.items():
-                    if key in lb_name or lb_name in key:
-                        total += lb_score
-                        matched_players.append(player)
-                        found = True
-                        break
+        leaderboard = data.get("leaderboard", [])
 
-                if not found:
-                    missing.append(player)
+        for player in leaderboard:
+            try:
+                name = player.get("player_name", "").strip()
 
-        results.append({
-            "name": person,
-            "total": total,
-            "missing": missing,
-            "matched": matched_players
-        })
+                score_raw = player.get("score", "0")
 
-    return sorted(results, key=lambda x: x["total"])
+                if score_raw == "E":
+                    score = 0
+                else:
+                    score = int(score_raw)
+
+                if "," in name:
+                    parts = name.split(",")
+                    name = parts[1].strip() + " " + parts[0].strip()
+
+                players[name] = score
+
+            except Exception as inner_error:
+                print("Player parse error:", inner_error)
+                continue
+
+    except Exception as e:
+        print("CBS fetch failed:", e)
+
+    return players
