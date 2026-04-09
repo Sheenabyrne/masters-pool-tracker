@@ -1,63 +1,81 @@
 from flask import Flask, jsonify, render_template
+import requests
 import json
 import unicodedata
 
 app = Flask(__name__)
 
-# 🔤 Normalize names (fix accents, case, spacing)
+# 🔤 Normalize names
 def normalize(name):
     return unicodedata.normalize('NFKD', name).encode('ASCII', 'ignore').decode().lower().strip()
 
 
-# 🌐 STATIC LEADERBOARD (YOUR PROVIDED SCORES)
+# 🎯 YOUR PLAYER LIST (MASTER LIST)
+TRACKED_PLAYERS = [
+    "Scottie Scheffler","Tommy Fleetwood","Collin Morikawa","Patrick Reed",
+    "Viktor Hovland","Bubba Watson","Corey Conners","Nicolai Hojgaard",
+    "Harry Hall","Wyndham Clark","Jordan Spieth","Sam Burns",
+    "Bryson DeChambeau","Hideki Matsuyama","Akshay Bhatia","Justin Rose",
+    "Charl Schwartzel","Adam Scott","Jake Knapp","Cameron Smith",
+    "Sungjae Im","Jacob Bridgeman","Cameron Young","Matt Fitzpatrick",
+    "Dustin Johnson","Si Woo Kim","Tom McKibbin","Max Homa",
+    "Brooks Koepka","Sepp Straka","Rasmus Neergaard-Petersen",
+    "Shane Lowry","Alexander Noren","Jon Rahm","Min Woo Lee",
+    "Marco Penge","Ben Griffin","Tyrrell Hatton","Rasmus Hojgaard",
+    "J.J. Spaun","Danny Willett","Ryan Gerard","Patrick Cantlay",
+    "Maverick McNealy","Robert MacIntyre"
+]
+
+
+# 🌐 LIVE CBS DATA
 def get_leaderboard():
-    return {
-        "Scottie Scheffler": 0,
-        "Tommy Fleetwood": -3,
-        "Collin Morikawa": 0,
-        "Patrick Reed": -3,
-        "Viktor Hovland": 1,
-        "Bubba Watson": 2,
-        "Corey Conners": 0,
-        "Nicolai Hojgaard": 0,
-        "Harry Hall": 1,
-        "Wyndham Clark": 1,
-        "Jordan Spieth": 0,
-        "Sam Burns": -2,
-        "Bryson DeChambeau": 0,
-        "Hideki Matsuyama": -2,
-        "Akshay Bhatia": 1,
-        "Justin Rose": -4,
-        "Charl Schwartzel": 2,
-        "Adam Scott": 0,
-        "Jake Knapp": 1,
-        "Cameron Smith": -1,
-        "Sungjae Im": -2,
-        "Jacob Bridgeman": 1,
-        "Cameron Young": 1,
-        "Matt Fitzpatrick": 1,
-        "Dustin Johnson": 2,
-        "Si Woo Kim": 1,
-        "Tom McKibbin": 0,
-        "Max Homa": 1,
-        "Brooks Koepka": 2,
-        "Sepp Straka": -1,
-        "Rasmus Neergaard-Petersen": 0,
-        "Shane Lowry": 0,
-        "Alexander Noren": 0,
-        "Jon Rahm": 0,
-        "Min Woo Lee": 1,
-        "Marco Penge": 0,
-        "Ben Griffin": 0,
-        "Tyrrell Hatton": 2,
-        "Rasmus Hojgaard": 0,
-        "J.J. Spaun": 1,
-        "Danny Willett": 2,
-        "Ryan Gerard": 0,
-        "Patrick Cantlay": 0,
-        "Maverick McNealy": 0,
-        "Robert MacIntyre": 1
-    }
+    url = "https://site.api.cbssports.com/golf/leaderboard/live"
+
+    players = {}
+
+    try:
+        response = requests.get(url, timeout=10)
+        data = response.json()
+
+        leaderboard = data.get("leaderboard", [])
+
+        for player in leaderboard:
+            name = player.get("player_name", "").strip()
+            score_raw = player.get("score", "0")
+
+            # Convert score
+            if score_raw == "E":
+                score = 0
+            else:
+                try:
+                    score = int(score_raw)
+                except:
+                    score = 0
+
+            # Fix "Last, First"
+            if "," in name:
+                parts = name.split(",")
+                name = parts[1].strip() + " " + parts[0].strip()
+
+            players[name] = score
+
+    except Exception as e:
+        print("CBS fetch failed:", e)
+
+    # 🔥 Ensure ALL tracked players exist (default = 0)
+    normalized_live = {normalize(k): v for k, v in players.items()}
+
+    final_players = {}
+
+    for player in TRACKED_PLAYERS:
+        key = normalize(player)
+
+        if key in normalized_live:
+            final_players[player] = normalized_live[key]
+        else:
+            final_players[player] = 0  # not started or not found
+
+    return final_players
 
 
 # 🧮 Calculate scores
@@ -107,8 +125,7 @@ def api():
     results = calculate_scores(leaderboard)
 
     return jsonify({
-        "leaderboard_count": len(leaderboard),
-        "leaderboard_sample": list(leaderboard.items())[:10],
+        "leaderboard": leaderboard,
         "results": results
     })
 
