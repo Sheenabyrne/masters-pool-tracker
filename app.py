@@ -1,65 +1,43 @@
 from flask import Flask, jsonify, render_template
 import requests
-from bs4 import BeautifulSoup
 import json
 import unicodedata
 
 app = Flask(__name__)
 
-URL = "https://mastersmadness.com/leaderboard"
-
-# 🔤 Normalize names (fix accents, case, spacing)
+# 🔤 Normalize names (handles accents, spacing, case)
 def normalize(name):
     return unicodedata.normalize('NFKD', name).encode('ASCII', 'ignore').decode().lower().strip()
 
 
-# 🌐 Get leaderboard (with fallback if scraping fails)
+# 🌐 ESPN LIVE LEADERBOARD
 def get_leaderboard():
+    url = "https://site.web.api.espn.com/apis/v2/sports/golf/leaderboard"
+
+    players = {}
+
     try:
-        response = requests.get(URL, timeout=10)
-        soup = BeautifulSoup(response.text, "html.parser")
+        response = requests.get(url, timeout=10)
+        data = response.json()
 
-        players = {}
-        rows = soup.select("table tbody tr")
+        competitors = data["events"][0]["competitions"][0]["competitors"]
 
-        for row in rows:
-            cols = row.find_all("td")
-            if len(cols) > 2:
-                name = cols[1].text.strip()
-                score = cols[2].text.strip()
+        for player in competitors:
+            name = player["athlete"]["displayName"]
+            score = player["score"]
 
-                if score == "E":
-                    score = 0
-                else:
-                    score = int(score.replace("+", ""))
+            # Convert score properly
+            if score == "E":
+                score = 0
+            else:
+                score = int(score)
 
-                players[name] = score
-
-        # ⚠️ If scraping fails or returns nothing → fallback
-        if not players:
-            raise Exception("No data scraped")
-
-        return players
+            players[name] = score
 
     except Exception as e:
-        print("Scraper failed, using fallback data:", e)
+        print("ESPN fetch failed:", e)
 
-        # 🔥 Fallback test data (ensures app still works)
-        return {
-            "Scottie Scheffler": -6,
-            "Rory McIlroy": -5,
-            "Ludvig Aberg": -4,
-            "Matt Fitzpatrick": -3,
-            "Akshay Bhatia": -2,
-            "Viktor Hovland": -4,
-            "Dustin Johnson": 1,
-            "Corey Conners": -2,
-            "Jake Knapp": 0,
-            "Marco Penge": 2,
-            "Shane Lowry": -3,
-            "Patrick Cantlay": -1,
-            "Sam Burns": -2
-        }
+    return players
 
 
 # 🧮 Calculate scores
@@ -67,7 +45,6 @@ def calculate_scores(leaderboard):
     with open("picks.json") as f:
         picks = json.load(f)
 
-    # Normalize leaderboard names
     normalized_leaderboard = {
         normalize(name): score for name, score in leaderboard.items()
     }
@@ -92,7 +69,6 @@ def calculate_scores(leaderboard):
             "missing": missing
         })
 
-    # Sort lowest score first (winner at top)
     return sorted(results, key=lambda x: x["total"])
 
 
@@ -111,7 +87,7 @@ def api():
     results = calculate_scores(leaderboard)
 
     return jsonify({
-        "leaderboard_sample": list(leaderboard.items())[:10],
+        "leaderboard_sample": list(leaderboard.items())[:15],
         "results": results
     })
 
