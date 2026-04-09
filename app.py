@@ -1,9 +1,6 @@
 from flask import Flask, jsonify, render_template
 import json
 import unicodedata
-import requests
-from bs4 import BeautifulSoup
-import time
 
 app = Flask(__name__)
 
@@ -29,70 +26,72 @@ TRACKED_PLAYERS = [
 ]
 
 
-# 🌐 Fetch live scores (scraping Masters leaderboard)
-def fetch_live_scores():
-    url = "https://www.masters.com/en_US/scores/index.html"
-
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
-
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, "html.parser")
-
-    scores = {}
-
-    rows = soup.select("tr")
-
-    for row in rows:
-        name_tag = row.select_one(".player-name")
-        score_tag = row.select_one(".player-score")
-
-        if name_tag and score_tag:
-            name = name_tag.text.strip()
-            score_text = score_tag.text.strip()
-
-            # Convert score
-            if score_text == "E":
-                score = 0
-            else:
-                try:
-                    score = int(score_text)
-                except:
-                    continue
-
-            scores[name] = score
-
-    return scores
-
-
-# ⚡ Cache (reduces load + speeds up app)
-CACHE = {
-    "data": None,
-    "timestamp": 0
+# ✏️ MANUAL SCORES (UPDATED)
+MANUAL_SCORES = {
+    "Adam Scott": 0,
+    "Akshay Bhatia": 1,
+    "Alexander Noren": 0,
+    "Ben Griffin": 0,
+    "Brooks Koepka": 2,
+    "Bryson DeChambeau": 0,
+    "Bubba Watson": 2,
+    "Cameron Smith": -1,
+    "Cameron Young": 1,
+    "Charl Schwartzel": 2,
+    "Collin Morikawa": 0,
+    "Corey Conners": 0,
+    "Danny Willett": 2,
+    "Dustin Johnson": 2,
+    "Harry Hall": 1,
+    "Hideki Matsuyama": -2,
+    "Jacob Bridgeman": 1,
+    "Jake Knapp": 1,
+    "J.J. Spaun": 1,
+    "Jon Rahm": 0,
+    "Jordan Spieth": 0,
+    "Justin Rose": -4,
+    "Ludvig Aberg": -1,
+    "Marco Penge": 0,
+    "Matt Fitzpatrick": 1,
+    "Maverick McNealy": 0,
+    "Max Homa": 1,
+    "Min Woo Lee": 1,
+    "Nicolai Hojgaard": 0,
+    "Patrick Cantlay": 0,
+    "Patrick Reed": -3,
+    "Rasmus Hojgaard": 0,
+    "Rasmus Neergaard-Petersen": 0,
+    "Robert MacIntyre": 1,
+    "Rory McIlroy": -1,
+    "Sam Burns": -2,
+    "Sepp Straka": -1,
+    "Shane Lowry": 0,
+    "Si Woo Kim": 1,
+    "Sungjae Im": -2,
+    "Tommy Fleetwood": -3,
+    "Tom McKibbin": 0,
+    "Tyrrell Hatton": 2,
+    "Viktor Hovland": 1,
+    "Wyndham Clark": 1,
+    "Ryan Gerard": 0
 }
 
 
 # 🌐 Build leaderboard
 def get_leaderboard():
-    # ⏱ Cache for 60 seconds
-    if time.time() - CACHE["timestamp"] < 60 and CACHE["data"]:
-        return CACHE["data"]
-
-    live_scores = fetch_live_scores()
-
-    normalized_live = {
-        normalize(name): score for name, score in live_scores.items()
+    normalized_manual = {
+        normalize(name): score for name, score in MANUAL_SCORES.items()
     }
 
     final_players = {}
 
     for player in TRACKED_PLAYERS:
         key = normalize(player)
-        final_players[player] = normalized_live.get(key, 0)
 
-    CACHE["data"] = final_players
-    CACHE["timestamp"] = time.time()
+        if key in normalized_manual:
+            final_players[player] = normalized_manual[key]
+        else:
+            final_players[player] = 0
 
     return final_players
 
