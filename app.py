@@ -22,13 +22,13 @@ TRACKED_PLAYERS = [
     "Matt Fitzpatrick","Maverick McNealy","Max Homa","Min Woo Lee",
     "Nicolai Hojgaard","Patrick Cantlay","Patrick Reed","Rasmus Hojgaard",
     "Rasmus Neergaard-Petersen","Robert MacIntyre","Rory McIlroy",
-    "Sam Burns","Sepp Straka","Shane Lowry","Si Woo Kim",
+    "Sam Burns","Scottie Scheffler","Sepp Straka","Shane Lowry","Si Woo Kim",
     "Sungjae Im","Tommy Fleetwood","Tom McKibbin","Tyrrell Hatton",
     "Viktor Hovland","Wyndham Clark","Ryan Gerard"
 ]
 
 
-# ✏️ MANUAL SCORES (UPDATED)
+# ✏️ MANUAL SCORES
 MANUAL_SCORES = {
     "Adam Scott": 0,
     "Akshay Bhatia": 1,
@@ -61,11 +61,12 @@ MANUAL_SCORES = {
     "Nicolai Hojgaard": 4,
     "Patrick Cantlay": 5,
     "Patrick Reed": -3,
-    "Rasmus Hojgaard": 6,
+    "Rasmus Hojgaard": 5,
     "Rasmus Neergaard-Petersen": 5,
     "Robert MacIntyre": 8,
     "Rory McIlroy": -5,
     "Sam Burns": -5,
+    "Scottie Scheffler": -2,
     "Sepp Straka": 1,
     "Shane Lowry": -2,
     "Si Woo Kim": 3,
