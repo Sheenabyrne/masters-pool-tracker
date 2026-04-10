@@ -13,7 +13,7 @@ def normalize(name):
 
 # 🎯 PLAYER LIST
 TRACKED_PLAYERS = [
-    "Adam Scott","Akshay Bhatia","Alexander Noren","Ben Griffin",
+    "Adam Scott","Scottie Scheffler","Akshay Bhatia","Alexander Noren","Ben Griffin",
     "Brooks Koepka","Bryson DeChambeau","Bubba Watson","Cameron Smith",
     "Cameron Young","Charl Schwartzel","Collin Morikawa","Corey Conners",
     "Danny Willett","Dustin Johnson","Harry Hall","Hideki Matsuyama",
@@ -31,6 +31,7 @@ TRACKED_PLAYERS = [
 # ✏️ MANUAL SCORES
 MANUAL_SCORES = {
     "Adam Scott": 0,
+    "Scottie Scheffler": -4,
     "Akshay Bhatia": 1,
     "Alexander Noren": 5,
     "Ben Griffin": 0,
