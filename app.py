@@ -31,7 +31,7 @@ TRACKED_PLAYERS = [
 # ✏️ MANUAL SCORES
 MANUAL_SCORES = {
     "Adam Scott": -2,
-    "Scottie Scheffler": -9,
+    "Scottie Scheffler": -11,
     "Akshay Bhatia": 6,
     "Alexander Noren": -1,
     "Ben Griffin": 0,
@@ -52,7 +52,7 @@ MANUAL_SCORES = {
     "J.J. Spaun": 5,
     "Jon Rahm": 1,
     "Jordan Spieth": -5,
-    "Justin Rose": -10,
+    "Justin Rose": -11,
     "Ludvig Aberg": -3,
     "Marco Penge": 6,
     "Matt Fitzpatrick": -4,
@@ -65,8 +65,8 @@ MANUAL_SCORES = {
     "Rasmus Hojgaard": 10,
     "Rasmus Neergaard-Petersen": 7,
     "Robert MacIntyre": 7,
-    "Rory McIlroy": -12,
-    "Sam Burns": -8,
+    "Rory McIlroy": -13,
+    "Sam Burns": -9,
     "Sepp Straka": 2,
     "Shane Lowry": -4,
     "Si Woo Kim": 4,
