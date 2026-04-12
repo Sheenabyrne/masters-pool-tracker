@@ -54,7 +54,7 @@ MANUAL_SCORES = {
     "Jordan Spieth": -1,
     "Justin Rose": -8,
     "Ludvig Aberg": -3,
-    "Marco Penge": 10,
+    "Marco Penge": 0,
     "Matt Fitzpatrick": -3,
     "Maverick McNealy": 1,
     "Max Homa": -3,
