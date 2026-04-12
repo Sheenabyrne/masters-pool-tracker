@@ -35,7 +35,7 @@ MANUAL_SCORES = {
     "Akshay Bhatia": 6,
     "Alexander Noren": 1,
     "Ben Griffin": -5,
-    "Brooks Koepka": -3,
+    "Brooks Koepka": -4,
     "Bryson DeChambeau": 6,
     "Bubba Watson": 5,
     "Cameron Smith": 7,
