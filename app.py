@@ -48,7 +48,7 @@ MANUAL_SCORES = {
     "Harry Hall": 5,
     "Hideki Matsuyama": -5,
     "Jacob Bridgeman": 2,
-    "Jake Knapp": -5,
+    "Jake Knapp": -7,
     "J.J. Spaun": 5,
     "Jon Rahm": 1,
     "Jordan Spieth": -5,
@@ -76,7 +76,7 @@ MANUAL_SCORES = {
     "Tyrrell Hatton": -10,
     "Viktor Hovland": -4,
     "Wyndham Clark": -3,
-    "Ryan Gerard": 2
+    "Ryan Gerard": 1
 }
 
 
